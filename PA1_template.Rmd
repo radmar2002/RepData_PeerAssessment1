@@ -1,14 +1,23 @@
-# Reproducible Research: Peer Assessment 1
+#Reproducible Research: Peer Assessment 1
+
+<p>Marius Florin RADU
+<br>Cluj-Napoca, Cluj, ROMANIA
+<br>mail: radu_marius_florin@yahoo.com</p>
+
 
 
 ## Loading and preprocessing the data
 
+
 Read the data source:
 ```{r load_data}
-activityDataFrame <- read.csv(unz("activity.zip", "activity.csv"), colClasses = c("numeric", "Date", "numeric"))
-summary(activityDataFrame)
+activityDataFrame <- read.table(unz("activity.zip", "activity.csv"), 
+                                colClasses = c("numeric", "Date", "numeric"),
+                                header=T, quote="\"", sep=",")
 head(activityDataFrame, 3)
+summary(activityDataFrame)
 ```
+
 
 ## What is mean total number of steps taken per day?
 
@@ -16,33 +25,45 @@ head(activityDataFrame, 3)
 # Use data.table to compute mean and median
 library(data.table)
 DT <- data.table(activityDataFrame, key = c("interval"))
-# Calculate mean and median
-(mm <- DT[, sum(steps), by = date][,list(Mean = mean(V1, na.rm = TRUE), Median = median(V1, na.rm = TRUE))])
+# Calculate the mean
+(mMean <- DT[, sum(steps), by = date][,list(Mean = mean(V1, na.rm = TRUE))])
+# Calculate the median
+(mMedian <- DT[, sum(steps), by = date][,list(Median = median(V1, na.rm = TRUE))])
 ```
 
-_The __mean__ number of steps per day is: `r round(as.integer(mm[[1]]),0)`
+The histogram of the total number of steps taken each day
+```{r chart_steps_1, echo = TRUE, fig.width = 5, fig.height = 5}
+library(lattice)
+DT2 <- data.table(activityDataFrame, key = c("interval"))
+DT2 <- DT2[, list(`Steps per day` = sum(steps)), by = date]
+DT2 <- DT2[complete.cases(DT2)]
+activityDataFrame02 <- as.data.frame(DT2)
+# Histogram
+histogram(activityDataFrame02[,2], main="Total number of steps per day", xlab="Steps per Day", col = "cornflowerblue")
+```
 
-The __median__ number of steps per day is: __`r round(mm[[2]],0)`__
+The __mean__ number of steps per day is: __`r as.character(round(mMean,0))`__
+
+The __median__ number of steps per day is: __`r as.character(round(mMedian,0))`__
+
 
 ## What is the average daily activity pattern?
 
-```{r echo = TRUE}
+```{r chart_steps_2, echo = TRUE, fig.width = 13, fig.height = 6}
 library(ggplot2)
 dataFrameforTimeSeries <- DT[, list( `Average # of Steps` = mean(steps, na.rm = TRUE) ), by = interval]
-
-dataFrameforTimeSeries 
-str(dataFrameforTimeSeries$interval)
-lvl <- 
 p <- ggplot(dataFrameforTimeSeries , aes(x=interval, y=`Average # of Steps`)) + 
      geom_line(colour = "dark blue", size=0.8) + 
-     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-     scale_x_discrete(limits=lvl)
+     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 p
 ```
 
+
 ## Imputing missing values
 
-
+```{r input_missing, echo = TRUE}
+for (i in seq_along(DT)) set(DT, i=which(is.na(DT[[i]])), j=i, value=0)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
