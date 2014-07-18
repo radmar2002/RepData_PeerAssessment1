@@ -32,14 +32,18 @@ DT <- data.table(activityDataFrame, key = c("interval"))
 ```
 
 The histogram of the total number of steps taken each day
-```{r chart_steps_1, echo = TRUE, fig.width = 5, fig.height = 5}
-library(lattice)
-DT2 <- data.table(activityDataFrame, key = c("interval"))
-DT2 <- DT2[, list(`Steps per day` = sum(steps)), by = date]
-DT2 <- DT2[complete.cases(DT2)]
-activityDataFrame02 <- as.data.frame(DT2)
+```{r chart_steps_1, echo = TRUE, fig.width = 10, fig.height = 5}
+library(ggplot2)
+activityCompleteCases <- activityDataFrame[complete.cases(activityDataFrame$steps),] 
+DT2 <- data.table(activityCompleteCases, key = c("interval"))
+stepsDaily <- as.data.frame(DT2[, list(`Steps per Day`=sum(steps)), by = date])
 # Histogram
-histogram(activityDataFrame02[,2], main="Total number of steps per day", xlab="Steps per Day", col = "cornflowerblue")
+hist1 <- qplot(`Steps per Day`, data=stepsDaily, geom="histogram") +
+        geom_histogram(aes(fill = ..count..)) +
+        xlab('Number of Steps per Day') +
+        ggtitle('Histogram of the total number of steps taken each day') +
+        theme(plot.title = element_text(lineheight=.8, face="bold"))
+hist1
 ```
 
 The __mean__ number of steps per day is: __`r as.character(round(mMean,0))`__
@@ -59,11 +63,106 @@ p <- ggplot(dataFrameforTimeSeries , aes(x=interval, y=`Average # of Steps`)) +
 p
 ```
 
+```{r max_steps_is, echo = TRUE}
+(maxSumSteps<-DT[, list( sumSteps = sum(steps, na.rm = TRUE) ), by = interval][, .SD[which.max(sumSteps)]])
+theInterval <- maxSumSteps[[1]]
+theMaxSum <-maxSumSteps [[2]]
+```
+
+The 5-minute interval which contains the maximum number of steps is __`r paste(theInterval, "th", sep="")`__ interval, and the corespondent number of steps is __`r as.character(theMaxSum)`__ 
 
 ## Imputing missing values
 
-```{r input_missing, echo = TRUE}
-for (i in seq_along(DT)) set(DT, i=which(is.na(DT[[i]])), j=i, value=0)
+```{r}
+isNA <- dim(activityDataFrame[!complete.cases(activityDataFrame),])[1]
+```
+The total number of rows with *NAs* is __`r isNA`__
+
+
+**To replace missing values of steps variable in following rows we use the mean computed for corespondent week of the record.**
+```{r}
+head(activityDataFrame, 3)
+activityDataFrame02 <- activityDataFrame
+activityDataFrame02$Week <- format(activityDataFrame02$date,"%Y-%U")
+stepsMeanByWeek <- aggregate(steps ~ Week, activityDataFrame02, FUN = mean, na.rm = TRUE)
+for( i in seq( dim(activityDataFrame02)[1] )){
+        if( is.na(activityDataFrame02[i , c("steps")]) ){
+                activityDataFrame02[i, c("steps")] <- stepsMeanByWeek[which(stepsMeanByWeek$Week == activityDataFrame02[i, c("Week")] ),c("steps")]
+        }
+}
+activityDataFrame02 <- activityDataFrame02[,-c(4)]
 ```
 
+
+The result is a new dataset that is equal to the original dataset but with the missing data filled in:
+```{r}
+head(activityDataFrame02, 3)
+summary(activityDataFrame02)
+```
+
+
+```{r mean_comparison}
+# Use data.table to compute mean and median
+library(data.table)
+DTII <- data.table(activityDataFrame02, key = c("interval"))
+# Calculate the mean
+(mMeanII <- DTII[, sum(steps), by = date][,list(Mean = mean(V1, na.rm = TRUE))])
+# Calculate the median
+(mMedianII <- DTII[, sum(steps), by = date][,list(Median = median(V1, na.rm = TRUE))])
+```
+
+The histogram of the total number of steps taken each day
+```{r chart_comparisons, echo = TRUE, fig.width = 10, fig.height = 5}
+library(ggplot2)
+activityCompleteCasesII <- activityDataFrame02[complete.cases(activityDataFrame02$steps),] 
+DT2II <- data.table(activityCompleteCasesII, key = c("interval"))
+stepsDailyII <- as.data.frame(DT2II[, list(`Steps per Day`=sum(steps)), by = date])
+# Histogram
+hist2 <- qplot(`Steps per Day`, data=stepsDailyII, geom="histogram") +
+        geom_histogram(aes(fill = ..count..)) +
+        xlab('Number of Steps per Day') +
+        ggtitle('Histogram of the total number of steps taken each day after NA replacement') +
+        theme(plot.title = element_text(lineheight=.8, face="bold")) + 
+        scale_fill_gradient("Count", low = "dark blue", high = "red")
+hist2
+```
+
+The __mean__ number of steps per day after **NAs** replacement is: __`r as.character(round(mMeanII,0))`__ and it is not statistically different from the __mean__ before replachement which is __`r as.character(round(mMean,0))`__
+
+There is bellow the **t-test** evaluation 
+```{r t_test_means, echo =TRUE}
+activityDataFrame02$old_steps <- activityDataFrame$steps
+(t.test(activityDataFrame02$steps,activityDataFrame02$old_steps))
+```
+
+The __median__ number of steps per day after **NAs** replacement is: __`r as.character(round(mMedianII,0))`__ and it is not statistically different from the __median__ before replachement which is __`r as.character(round(mMedian,0))`__
+
+There is bellow the **Mann-Whitney-Wilcoxon test** evaluation 
+```{r mann_w_median, echo =TRUE}
+(wilcox.test(activityDataFrame02$steps,activityDataFrame02$old_steps))
+```
+
+
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r plot_by_weekday}
+# Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+#Decimal Weekday (0=Sunday)
+activityDataFrame03 <- activityDataFrame
+activityDataFrame03$DayOfWeek <- as.factor(ifelse(format(activityDataFrame$date,"%w") %in% c(0,6), 0, 1))
+levels(activityDataFrame03$DayOfWeek) <- c("weekend", "weekday")
+table(activityDataFrame03$DayOfWeek)
+
+activityCompleteCasesIII <- activityDataFrame03[complete.cases(activityDataFrame03$steps),] 
+head(activityCompleteCasesIII, 3)
+# Histogram
+tsPlot2 <- ggplot(activityCompleteCasesIII, aes(interval, steps)) +  
+        ylab('Number of Steps') +
+        ggtitle('# steps taken each interval by day of the week') +
+        stat_summary(fun.y = "mean", geom="line", col = "red", size=0.8) + 
+        facet_grid(DayOfWeek ~ .) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+tsPlot2
+```
+
+**Yes**, there are differences between weekdays and weekends. 
