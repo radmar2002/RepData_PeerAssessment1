@@ -15,11 +15,11 @@ activityDataFrame <- read.table(unz("activity.zip", "activity.csv"),
                                 colClasses = c("numeric", "Date", "numeric"),
                                 header=T, quote="\"", sep=",")
 head(activityDataFrame, 3)
-summary(activityDataFrame)
 ```
 
 
 ## What is mean total number of steps taken per day?
+
 
 ```{r mean_of_steps_x_day}
 # Use data.table to compute mean and median
@@ -53,6 +53,7 @@ The __median__ number of steps per day is: __`r as.character(round(mMedian,0))`_
 
 ## What is the average daily activity pattern?
 
+
 ```{r chart_steps_2, echo = TRUE, fig.width = 13, fig.height = 6}
 library(ggplot2)
 dataFrameforTimeSeries <- DT[, list( `Average # of Steps` = mean(steps, na.rm = TRUE) ), by = interval]
@@ -79,7 +80,7 @@ isNA <- dim(activityDataFrame[!complete.cases(activityDataFrame),])[1]
 The total number of rows with *NAs* is __`r isNA`__
 
 
-**To replace missing values of steps variable in following rows we use the mean computed for corespondent week of the record.**
+**Imputing strategy:** to replace missing values of steps variable in following rows we use **the mean computed for corespondent week** of the record.
 ```{r}
 head(activityDataFrame, 3)
 activityDataFrame02 <- activityDataFrame
@@ -142,8 +143,10 @@ There is bellow the **Mann-Whitney-Wilcoxon test** evaluation
 (wilcox.test(activityDataFrame02$steps,activityDataFrame02$old_steps))
 ```
 
+The impact of *NAs* replacement with the average on week data is relatively small.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
 
 ```{r plot_by_weekday}
 # Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
