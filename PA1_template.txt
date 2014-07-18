@@ -1,9 +1,9 @@
 
 <!--
-Load knitr library: 
+Load knitr library:
 library(knitr)
 Obtain the **.md** file:
-knit2html("PA1_template.Rmd");browseURL("PA1_template.html")
+knit2html("PA1_template.md");browseURL("PA1_template.html")
 -->
 
 ## Reproducible Research: Peer Assessment 1
