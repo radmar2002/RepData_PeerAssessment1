@@ -1,3 +1,7 @@
+
+<!-- Make sure that the knitr package is installed and loaded. -->
+<!-- Code for final HTML. -->
+
 #Reproducible Research: Peer Assessment 1
 
 <p>Marius Florin RADU
