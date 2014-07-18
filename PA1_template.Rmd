@@ -3,7 +3,8 @@
 Load knitr library:
 library(knitr)
 Obtain the **.md** file:
-knit2html("PA1_template.Rmd");browseURL("PA1_template.html")
+knit2html("PA1_template.Rmd")
+browseURL("PA1_template.html")
 -->
 
 ## Reproducible Research: Peer Assessment 1
@@ -40,7 +41,7 @@ DT <- data.table(activityDataFrame, key = c("interval"))
 ```
 
 The histogram of the total number of steps taken each day
-```{r chart_steps_1, echo = TRUE, fig.width = 10, fig.height = 5}
+```{r chart_steps_1, echo = TRUE, fig.width = 13, fig.height = 6}
 library(ggplot2)
 activityCompleteCases <- activityDataFrame[complete.cases(activityDataFrame$steps),] 
 DT2 <- data.table(activityCompleteCases, key = c("interval"))
@@ -121,7 +122,7 @@ DTII <- data.table(activityDataFrame02, key = c("interval"))
 ```
 
 The histogram of the total number of steps taken each day
-```{r chart_comparisons, echo = TRUE, fig.width = 10, fig.height = 5}
+```{r chart_comparisons, echo = TRUE, fig.width = 13, fig.height = 6}
 library(ggplot2)
 activityCompleteCasesII <- activityDataFrame02[complete.cases(activityDataFrame02$steps),] 
 DT2II <- data.table(activityCompleteCasesII, key = c("interval"))
@@ -156,9 +157,10 @@ The impact of *NAs* replacement with the average on week data is relatively smal
 ## Are there differences in activity patterns between weekdays and weekends?
 
 
-```{r plot_by_weekday, echo = TRUE, fig.width = 12, fig.height = 8}
-# Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
-#Decimal Weekday (0=Sunday)
+```{r plot_by_weekday, echo = TRUE, fig.width = 13, fig.height = 8}
+# Create a new factor variable in the dataset with two levels: 'weekday' and 'weekend' 
+# indicating whether a given date is a weekday or weekend day.
+# Decimal Weekday (0=Sunday)
 activityDataFrame03 <- activityDataFrame
 activityDataFrame03$DayOfWeek <- as.factor(ifelse(format(activityDataFrame$date,"%w") %in% c(0,6), 0, 1))
 levels(activityDataFrame03$DayOfWeek) <- c("weekend", "weekday")

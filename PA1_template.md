@@ -1,9 +1,10 @@
 
 <!--
-Load knitr library: 
+Load knitr library:
 library(knitr)
 Obtain the **.md** file:
-knit2html("PA1_template.Rmd");browseURL("PA1_template.html")
+knit2html("PA1_template.Rmd")
+browseURL("PA1_template.html")
 -->
 
 ## Reproducible Research: Peer Assessment 1
@@ -41,6 +42,13 @@ head(activityDataFrame, 3)
 ```r
 # Use data.table to compute mean and median
 library(data.table)
+```
+
+```
+## data.table 1.9.2  For help type: help("data.table")
+```
+
+```r
 DT <- data.table(activityDataFrame, key = c("interval"))
 # Calculate the mean
 (mMean <- DT[, sum(steps), by = date][,list(Mean = mean(V1, na.rm = TRUE))])
@@ -280,8 +288,9 @@ The impact of *NAs* replacement with the average on week data is relatively smal
 
 
 ```r
-# Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
-#Decimal Weekday (0=Sunday)
+# Create a new factor variable in the dataset with two levels: 'weekday' and 'weekend' 
+# indicating whether a given date is a weekday or weekend day.
+# Decimal Weekday (0=Sunday)
 activityDataFrame03 <- activityDataFrame
 activityDataFrame03$DayOfWeek <- as.factor(ifelse(format(activityDataFrame$date,"%w") %in% c(0,6), 0, 1))
 levels(activityDataFrame03$DayOfWeek) <- c("weekend", "weekday")
